@@ -1,37 +1,29 @@
 import { rules, createComparison } from "../lib/compare.js";
 
 export function initFiltering(elements, filters) {
-    // Безопасное наполнение селектора продавцов
-    // Используем опциональную цепочку ?. чтобы не упасть, если элементов еще нет
-    if (elements?.searchBySeller && filters?.searchBySeller) {
-        elements.searchBySeller.innerHTML = '<option value="">All Sellers</option>';
-        filters.searchBySeller.forEach(seller => {
-            const option = document.createElement('option');
-            option.value = seller;
-            option.textContent = seller;
-            elements.searchBySeller.appendChild(option);
-        });
-    }
-
     return (data, state) => {
-        // Если данных нет — возвращаем пустой массив
-        if (!Array.isArray(data)) return [];
-        // Если фильтры не заданы (первая загрузка) — возвращаем данные без изменений
-        if (!state) return data;
-
-        // Сопоставляем ключи из формы (state) с ключами в объектах данных (data)
+        // 1. Формируем объект target для сравнения.
+        // ВАЖНО: В твоих данных (source) поле называется 'total'.
+        // Поэтому в target мы тоже создаем ключ 'total', объединяя 
+        // значения из двух инпутов 'totalFrom' и 'totalTo' в массив.
         const target = {
             date: state.searchByDate,
             customer: state.searchByCustomer,
             seller: state.searchBySeller,
-            total: [state.totalFrom, state.totalTo]
+            // Массив [от, до] для работы правила arrayAsRange
+            total: [state.totalFrom, state.totalTo] 
         };
 
+        // 2. Настраиваем компаратор.
+        // Добавляем 'arrayAsRange' в список имен правил.
         const compare = createComparison(
-            ['skipEmptyTargetValues', 'arrayAsRange', 'caseInsensitiveStringIncludes'], 
+            ['skipEmptyTargetValues', 'arrayAsRange', 'stringIncludes'], 
             []
         );
 
+        if (!data) return [];
+
+        // 3. Фильтруем данные
         return data.filter(item => compare(item, target));
     };
 }
