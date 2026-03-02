@@ -1,33 +1,29 @@
-import {createComparison, defaultRules} from "../lib/compare.js";
+import { rules, createComparison } from "../lib/compare.js";
 
-// @todo: #4.3 — настроить компаратор
+export function initFiltering(elements, filters) {
+    return (data, state) => {
+        // 1. Формируем объект target для сравнения.
+        // ВАЖНО: В твоих данных (source) поле называется 'total'.
+        // Поэтому в target мы тоже создаем ключ 'total', объединяя 
+        // значения из двух инпутов 'totalFrom' и 'totalTo' в массив.
+        const target = {
+            date: state.searchByDate,
+            customer: state.searchByCustomer,
+            seller: state.searchBySeller,
+            // Массив [от, до] для работы правила arrayAsRange
+            total: [state.totalFrom, state.totalTo] 
+        };
 
-const compare = createComparison(defaultRules); 
+        // 2. Настраиваем компаратор.
+        // Добавляем 'arrayAsRange' в список имен правил.
+        const compare = createComparison(
+            ['skipEmptyTargetValues', 'arrayAsRange', 'stringIncludes'], 
+            []
+        );
 
-export function initFiltering(elements, indexes) {
-        // @todo: #4.1 — заполнить выпадающие списки опциями
-    Object.keys(indexes).forEach((elementName) => {
-        if (elements[elementName]) {
-            const options = Object.values(indexes[elementName]).map(name => {
-                const option = document.createElement('option');
-                option.value = name;
-                option.textContent = name;
-                return option;
-            });
-            elements[elementName].append(...options);
-        }
-    });
+        if (!data) return [];
 
-    return (data, state, action) => {
-        // @todo: #4.2 — обработать очистку поля
-         if (action && action.name === 'clear') {
-            const fieldName = action.dataset.field;
-            const input = elements[action.dataset.name] || action.parentElement.querySelector('input');
-            if (input) input.value = '';
-            state[fieldName] = '';
-        }
-
-        // @todo: #4.5 — отфильтровать данные используя компаратор
-        return data.filter(row => compare(row, state)); 
-    }
+        // 3. Фильтруем данные
+        return data.filter(item => compare(item, target));
+    };
 }
