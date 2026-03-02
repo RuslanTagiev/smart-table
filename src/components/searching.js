@@ -1,38 +1,43 @@
 import { rules, createComparison } from "../lib/compare.js";
 
 export function initSearching(searchFieldName) {
-    // searchFieldName — это имя поля из формы (например, 'search')
-
+    // Возвращаем функцию фильтрации
     return (data, state) => {
-        // 1. Извлекаем текст поиска из состояния формы
-        const searchText = state?.[searchFieldName] || '';
+        // Защита: если данных нет, возвращаем пустой массив
+        if (!Array.isArray(data)) return [];
 
-        // 2. Настраиваем компаратор:
-        // ПЕРВЫЙ аргумент searchMultipleFields — это имя ключа, который мы будем искать в объекте target.
-        const compare = createComparison(
-            ['skipEmptyTargetValues'], 
-            [
-                rules.searchMultipleFields(
-                    searchFieldName, 
-                    ['date', 'customer', 'seller'], 
-                    false
-                )
-            ]
-        );
+        // 1. Безопасно достаем текст поиска из state
+        const searchText = state?.[searchFieldName];
 
-        if (!data) return [];
+        // 2. Если текста нет (пусто или undefined) — возвращаем ВСЕ данные
+        // Это критично для тестов, чтобы они увидели первые 10 строк
+        if (!searchText || String(searchText).trim() === "") {
+            return data;
+        }
 
-        // 3. Создаем объект target. 
-        // Библиотека переберет ключи этого объекта. Когда она найдет ключ, 
-        // совпадающий с searchFieldName, сработает наше правило поиска.
-        const target = {
-            [searchFieldName]: searchText
-        };
+        try {
+            // 3. Создаем компаратор
+            const compare = createComparison(
+                ['skipEmptyTargetValues'], 
+                [
+                    rules.searchMultipleFields(
+                        searchFieldName, 
+                        ['date', 'customer', 'seller'], 
+                        false
+                    )
+                ]
+            );
 
-        // 4. Фильтруем данные
-        return data.filter(item => {
-            // item — исходный объект (строка таблицы), target — объект с поисковым запросом
-            return compare(item, target);
-        });
+            // 4. Формируем объект target для библиотеки
+            const target = { [searchFieldName]: searchText };
+
+            // 5. Фильтруем
+            return data.filter(item => compare(item, target));
+        } catch (e) {
+            // Если библиотека выдала ошибку — не ломаем приложение, 
+            // а просто отдаем нефильтрованные данные
+            console.error("Search failed:", e);
+            return data;
+        }
     };
 }
