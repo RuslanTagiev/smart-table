@@ -5,6 +5,14 @@ export function initSorting(columns) {
     let field = null;
     let order = null;
 
+    // ПРАВКА: Если это глобальный сброс (Reset all filters), 
+    // кнопки не передаются в action, и нам нужно сбросить все dataset.value в "none"
+    if (!action) {
+      columns.forEach((column) => {
+        column.dataset.value = "none";
+      });
+    }
+
     if (action && action.name === "sort") {
       // @todo: #3.1 — запомнить выбранный режим сортировки
       action.dataset.value = sortMap[action.dataset.value];

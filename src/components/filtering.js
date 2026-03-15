@@ -19,16 +19,29 @@ export function initFiltering(elements) {
   };
 
   const applyFiltering = (query, state, action) => {
-    // Код с обработкой очистки поля (кнопка clear)
-    if (action?.dataset?.name === "clear") {
-      const fieldName = action.dataset.field;
+    // 1. ИСПРАВЛЕНИЕ: Проверяем нажатие на "крестик" по атрибуту name="clear"
+    if (action && action.name === "clear") {
       const parent = action.parentElement;
-      const input =
-        parent.querySelector("input") || parent.querySelector("select");
-      if (input) {
-        input.value = "";
-        state[fieldName] = "";
-      }
+      
+      // Находим ВСЕ инпуты внутри обертки фильтра (это очистит и Date, и оба поля Total)
+      const inputs = parent.querySelectorAll('input, select');
+      
+      inputs.forEach(input => {
+        input.value = ''; // Очищаем визуально в DOM
+        if (state) {
+          state[input.name] = ''; // Очищаем в объекте состояния (state)
+        }
+      });
+    }
+
+    // 2. ИСПРАВЛЕНИЕ: Логика для кнопки "Reset all filters" (когда action не передан)
+    // Чтобы при общем сбросе state тоже очищался
+    if (!action && state) {
+      Object.keys(state).forEach(key => {
+          if (['date', 'customer', 'seller', 'totalFrom', 'totalTo'].includes(key)) {
+              state[key] = '';
+          }
+      });
     }
 
     // Формируем объект фильтра для сервера

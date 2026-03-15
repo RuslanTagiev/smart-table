@@ -1,6 +1,4 @@
-import { makeIndex } from "./lib/utils.js";
 
-// Константа с адресом сервера (Шаг: доделываем API)
 const BASE_URL = "https://webinars.webdev.education-services.ru/sp7-api";
 
 export function initData(sourceData) {
