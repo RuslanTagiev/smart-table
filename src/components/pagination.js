@@ -7,25 +7,35 @@ export const initPagination = (
   // @todo: #2.3 — подготовить шаблон кнопки для страницы и очистить контейнер
   const pageTemplate = pages.firstElementChild.cloneNode(true);
   pages.firstElementChild.remove();
-    let pageCount;
+  let pageCount;
 
   const applyPagination = (query, state, action) => {
     const limit = state.rowsPerPage;
     let page = state.page;
 
     // переносим код, который делали под @todo: #2.6
-    if (action) switch(action.name) {
-        case 'prev': page = Math.max(1, page - 1); break;
-        case 'next': page = pageCount ? Math.min(pageCount, page + 1) : page + 1; break;
-        case 'first': page = 1; break;
-        case 'last': page = pageCount || page; break;
-    }
+    if (action)
+      switch (action.name) {
+        case "prev":
+          page = Math.max(1, page - 1);
+          break;
+        case "next":
+          page = pageCount ? Math.min(pageCount, page + 1) : page + 1;
+          break;
+        case "first":
+          page = 1;
+          break;
+        case "last":
+          page = pageCount || page;
+          break;
+      }
 
-    return Object.assign({}, query, { // добавим параметры к query, но не изменяем исходный объект
-        limit,
-        page
+    return Object.assign({}, query, {
+      // добавим параметры к query, но не изменяем исходный объект
+      limit,
+      page,
     });
-  }
+  };
 
   const updatePagination = (total, { page, limit }) => {
     pageCount = Math.ceil(total / limit);
@@ -41,12 +51,12 @@ export const initPagination = (
 
     // переносим код, который делали под @todo: #2.5 (обратите внимание, что rowsPerPage заменена на limit)
     fromRow.textContent = (page - 1) * limit + 1;
-    toRow.textContent = Math.min((page * limit), total);
+    toRow.textContent = Math.min(page * limit, total);
     totalRows.textContent = total;
-  }
+  };
 
   return {
     updatePagination,
-    applyPagination
+    applyPagination,
   };
 };
